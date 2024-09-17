@@ -12,6 +12,7 @@ from transformers import (
 )
 from peft import LoraConfig, PeftModel
 from trl import SFTTrainer
+import platform
 
 # The model that you want to train from the Hugging Face hub
 model_name = "NousResearch/Llama-2-7b-chat-hf"
@@ -120,6 +121,7 @@ packing = False
 
 # Load the entire model on the GPU 0
 device_map = {"": 0}
+mac_device_map = {"cpu": 0}
 
 # Load dataset (you can process it here)
 dataset = load_dataset(dataset_name, split="train")
@@ -134,20 +136,22 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_use_double_quant=use_nested_quant,
 )
 
-# Check GPU compatibility with bfloat16
-"""
-if compute_dtype == torch.float16 and use_4bit:
-    major, _ = torch.cuda.get_device_capability()
-    if major >= 8:
-        print("=" * 80)
-        print("Your GPU supports bfloat16: accelerate training with bf16=True")
-        print("=" * 80)
-"""
+if(not platform.system() == "Darwin"):
+
+    # Check GPU compatibility with bfloat16
+    if compute_dtype == torch.float16 and use_4bit:
+        major, _ = torch.cuda.get_device_capability()
+        if major >= 8:
+            print("=" * 80)
+            print("Your GPU supports bfloat16: accelerate training with bf16=True")
+            print("=" * 80)
+
+
 # Load base model
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     quantization_config=bnb_config,
-    device_map=device_map,
+    device_map=mac_device_map,
     max_memory={0:"3GB","cpu": "60GiB"},
 )
 model.config.use_cache = True
