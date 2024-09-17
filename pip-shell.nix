@@ -13,5 +13,5 @@
     gcc
     cmake
   ]);
-  runScript = "bash";
+  runScript = "zsh";
 }).env
