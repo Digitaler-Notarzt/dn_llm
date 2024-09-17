@@ -121,7 +121,7 @@ packing = False
 
 # Load the entire model on the GPU 0
 device_map = {"": 0}
-mac_device_map = {"cpu": 0}
+mac_device_map = {"mps": 0}
 
 # Load dataset (you can process it here)
 dataset = load_dataset(dataset_name, split="train")
