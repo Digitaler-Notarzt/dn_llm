@@ -1,11 +1,14 @@
 from llama_cpp import Llama
 
-llm = Llama.from_pretrained(
-    repo_id="akjindal53244/Llama-3.1-Storm-8B-GGUF",
-    filename="Llama-3.1-Storm-8B.Q4_K_M.gguf",
-)
+def setup():
+    llm = Llama.from_pretrained(
+        repo_id="akjindal53244/Llama-3.1-Storm-8B-GGUF",
+        filename="Llama-3.1-Storm-8B.Q4_K_M.gguf",
+    )
 
 def question(msg):
+    while True:
+            question(input("Ask a question: "))
     if(msg == "exit"):
         quit()
 
@@ -17,6 +20,4 @@ def question(msg):
     )
     print(output)
 
-if __name__ == "__main__":
-    while True:
-        question(input("Ask a question: "))
+    
