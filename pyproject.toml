@@ -4,10 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dn_llm_czlabinger"
-version = "0.0.5"
-authors = [
-  { name="czlabinger", email="czlabinger@student.tgm.ac.at" },
-]
+version = "0.0.6"
+authors = [{ name = "czlabinger", email = "czlabinger@student.tgm.ac.at" }]
 description = "Package to interact with LLMs"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -16,7 +14,4 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-	"llama-cpp-python",
-	"huggingface-hub"
-]
+dependencies = ["llama-cpp-python", "huggingface-hub"]
