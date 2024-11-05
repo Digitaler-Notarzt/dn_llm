@@ -8,15 +8,19 @@ class Dn_llm:
             filename="Llama-3.1-Storm-8B.Q4_K_M.gguf",
         )
 
-    def question(self, msg: str): 
+    def question(self, msg: str, system_message: str):
             if(msg == "exit"):
                 quit()
 
-            output = self.llm(
-                "Q: " + msg + " A: ",
-                max_tokens=100,
-                stop=["stop", "\n"],
-                echo=True
+
+            output = self.llm.create_chat_completion(
+                  messages = [
+                      {"role": "system", "content": f"{system_message}"},
+                      {
+                          "role": "user",
+                          "content": f"{msg}"
+                      }
+                  ]
             )
+
             print(output)
-    

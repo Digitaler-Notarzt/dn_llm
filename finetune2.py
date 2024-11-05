@@ -5,13 +5,10 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    HfArgumentParser,
     TrainingArguments,
-    pipeline,
-    logging,
 )
-from peft import LoraConfig, PeftModel
 from trl import SFTTrainer
+from peft import LoraConfig
 import platform
 
 # The model that you want to train from the Hugging Face hub
@@ -28,7 +25,7 @@ new_model = "DINO"
 ################################################################################
 
 # LoRA attention dimension
-lora_r = 64
+lora_r = 32  # Reduced from 64
 
 # Alpha parameter for LoRA scaling
 lora_alpha = 16
@@ -50,7 +47,7 @@ bnb_4bit_compute_dtype = "float16"
 bnb_4bit_quant_type = "nf4"
 
 # Activate nested quantization for 4-bit base models (double quantization)
-use_nested_quant = False
+use_nested_quant = True  # Changed to True for further memory savings
 
 ################################################################################
 # TrainingArguments parameters
@@ -63,17 +60,17 @@ output_dir = "./results"
 num_train_epochs = 1
 
 # Enable fp16/bf16 training (set bf16 to True with an A100)
-fp16 = False
-bf16 = True
+fp16 = True  # Changed to True
+bf16 = False  # Changed to False
 
 # Batch size per GPU for training
-per_device_train_batch_size = 2
+per_device_train_batch_size = 1  # Reduced from 2
 
 # Batch size per GPU for evaluation
-per_device_eval_batch_size = 2
+per_device_eval_batch_size = 1  # Reduced from 2
 
 # Number of update steps to accumulate the gradients for
-gradient_accumulation_steps = 1
+gradient_accumulation_steps = 4  # Increased from 1
 
 # Enable gradient checkpointing
 gradient_checkpointing = True
@@ -82,7 +79,7 @@ gradient_checkpointing = True
 max_grad_norm = 0.3
 
 # Initial learning rate (AdamW optimizer)
-learning_rate = 2e-4
+learning_rate = 1e-4  # Reduced from 2e-4
 
 # Weight decay to apply to all layers except bias/LayerNorm weights
 weight_decay = 0.001
@@ -94,7 +91,7 @@ optim = "paged_adamw_32bit"
 lr_scheduler_type = "constant"
 
 # Number of training steps (overrides num_train_epochs)
-max_steps = -1
+max_steps = 100  # Added a limit to reduce overall training time
 
 # Ratio of steps for a linear warmup (from 0 to learning rate)
 warmup_ratio = 0.03
@@ -104,17 +101,17 @@ warmup_ratio = 0.03
 group_by_length = True
 
 # Save checkpoint every X updates steps
-save_steps = 25
+save_steps = 50  # Increased from 25
 
 # Log every X updates steps
-logging_steps = 25
+logging_steps = 50  # Increased from 25
 
 ################################################################################
 # SFT parameters
 ################################################################################
 
 # Maximum sequence length to use
-max_seq_length = None
+max_seq_length = 512  # Added a limit to reduce memory usage
 
 # Pack multiple short examples in the same input sequence to increase efficiency
 packing = False
@@ -137,7 +134,6 @@ bnb_config = BitsAndBytesConfig(
 )
 
 if(not platform.system() == "Darwin"):
-
     # Check GPU compatibility with bfloat16
     if compute_dtype == torch.float16 and use_4bit:
         major, _ = torch.cuda.get_device_capability()
@@ -146,15 +142,14 @@ if(not platform.system() == "Darwin"):
             print("Your GPU supports bfloat16: accelerate training with bf16=True")
             print("=" * 80)
 
-
 # Load base model
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     quantization_config=bnb_config,
-    device_map=mac_device_map,
-    max_memory={0:"3GB","cpu": "60GiB"},
+    device_map=device_map,
+    max_memory={0:"2GB","cpu": "30GiB"},  # Reduced memory allocation
 )
-model.config.use_cache = True
+model.config.use_cache = False  # Changed to False to save memory
 model.config.pretraining_tp = 1
 
 # Load LLaMA tokenizer
