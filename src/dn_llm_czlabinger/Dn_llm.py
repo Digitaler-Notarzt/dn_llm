@@ -29,4 +29,4 @@ class Dn_llm:
                   ]
             )
 
-            print(output)
+            return output
