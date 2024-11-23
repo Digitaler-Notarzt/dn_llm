@@ -9,9 +9,15 @@ class Dn_llm:
         )
 
     def question(self, msg: str, system_message: str):
+
+            if(msg == "" or msg == None):
+                raise ValueError("Msg cannot be empty or None")
+
+            if(system_message == "" or system_message == None):
+                raise ValueError("System message cannot be empty or None")
+
             if(msg == "exit"):
                 quit()
-
 
             output = self.llm.create_chat_completion(
                   messages = [
