@@ -13,3 +13,4 @@ jobs:
         uses: actions/checkout@v4
       - name: Release
         uses: softprops/action-gh-release@v2
+        tag_name: ${{ github.sha }}
