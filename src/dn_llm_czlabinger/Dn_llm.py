@@ -16,9 +16,6 @@ class Dn_llm:
             if(system_message == "" or system_message == None):
                 raise ValueError("System message cannot be empty or None")
 
-            if(msg == "exit"):
-                quit()
-
             output = self.llm.create_chat_completion(
                   messages = [
                       {"role": "system", "content": f"{system_message}"},
