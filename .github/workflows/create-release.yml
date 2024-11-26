@@ -39,7 +39,7 @@ jobs:
 
       - name: Create and Push Tag
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
         run: |
           git tag ${{ env.TAG }}
           git push origin ${{ env.TAG }}
