@@ -37,9 +37,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          str = ${{ secrets.GITHUB_TOKEN }}
-          n = ${#str}
-          echo "n=$n"
+          str=${{ secrets.GITHUB_TOKEN }}
+          n=`expr "$str" : '.*'`
+          echo "Length of the string is : $n "
+
           # Check how many releases exist with this version
           EXISTING_RELEASES=$(gh release list | grep "${{ steps.get_version.outputs.version }}" | wc -l)
 
