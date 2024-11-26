@@ -41,7 +41,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUBTOKEN }}
         run: |
-          print ${{ env.GITHUB_TOKEN }}
+          echo ${{ env.GITHUB_TOKEN }}
           git tag ${{ env.TAG }}
           git push origin ${{ env.TAG }}
 
