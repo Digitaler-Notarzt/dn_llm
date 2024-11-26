@@ -25,12 +25,12 @@ jobs:
         id: get_version
         run: |
           VERSION=$(python -c "
-            import tomli
-            with open('pyproject.toml', 'rb') as f:
-              pyproject = tomli.load(f)
-              print(pyproject['project']['version'])
-            ")
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          import tomli
+          with open('pyproject.toml', 'rb') as f:
+            pyproject = tomli.load(f)
+            print(pyproject['project']['version'])
+          ")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Check Existing Releases
         id: check_releases
