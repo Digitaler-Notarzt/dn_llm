@@ -37,7 +37,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          str = ${{ GH_TOKEN }}
+          str = ${{ secrets.GITHUB_TOKEN }}
           echo ${#str}
           # Check how many releases exist with this version
           EXISTING_RELEASES=$(gh release list | grep "${{ steps.get_version.outputs.version }}" | wc -l)
