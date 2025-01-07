@@ -27,3 +27,14 @@ class Dn_llm:
             )
 
             return output
+
+
+    def load(self, system_message: str):
+        if(system_message == "" or system_message == None):
+            raise ValueError("System message cannot be \"\" or None")
+        
+        self.llm.create_chat_completion(
+                messages = [
+                    {"role": "system", "content": f"{system_message}"}
+                    ]
+            )
