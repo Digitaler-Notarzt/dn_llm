@@ -10,4 +10,6 @@ print(output)
 ```
 
 
-TODO: Systemprompt to ignore off topic stuff
+TODO: 
+- [ ] Systemprompt to ignore off topic stuff
+- [ ] Output Token limit
