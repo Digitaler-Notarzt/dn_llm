@@ -2,10 +2,14 @@ from src.dn_llm_czlabinger.Dn_llm import Dn_llm
 
 def main():
     llm = Dn_llm()
-    llm.load(system_message="Du bist ein AI assistent der keine gefuehle hat.")
-    output = llm.question(msg="Wie geht es dir?", system_message="Du bist ein AI assistent der keine gefuehle hat.")
+    llm.load()
 
-    print(output)
+    user = input("Frage: ")
+    
+    while(user != "exit"):
+        output = llm.question(msg=f"{user}")
+        print(output)
+        user = input("Frage: ")
 
 if __name__ == "__main__":
     main()
