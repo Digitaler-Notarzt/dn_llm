@@ -8,3 +8,8 @@ output = llm.question(msg="Wie geht es dir?", system_message="Du bist ein AI ass
 
 print(output)
 ```
+
+
+TODO: 
+- [ ] Systemprompt to ignore off topic stuff
+- [ ] Output Token limit
