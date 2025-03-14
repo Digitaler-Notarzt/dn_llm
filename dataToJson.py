@@ -81,7 +81,9 @@ Key Reminders
     Always prioritize quick assessment and rapid transport over prolonged on-site diagnostics.
 
     Ensure that hypoglycemia has been ruled out before confirming a stroke diagnosis.
-  """
+
+    **RS** is the user and **AI** is what you responded
+"""
 
 data = []
 
