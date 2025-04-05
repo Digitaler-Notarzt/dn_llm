@@ -1,93 +1,111 @@
 import torch
 from datasets import load_dataset
-from peft import get_peft_model, LoraConfig
-from transformers import TrainingArguments, BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer
-from transformers import Trainer
+from peft import get_peft_model, LoraConfig, prepare_model_for_kbit_training
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    TrainingArguments,
+    Trainer,
+    BitsAndBytesConfig,
+    DataCollatorForLanguageModeling
+)
 
+# Configuration
 model_name = "akjindal53244/Llama-3.1-Storm-8B"
 max_seq_length = 2048
+output_dir = "./lora_finetuned_llama_storm"
 
-# Define quantization configuration
+# Quantization configuration
 quantization_config = BitsAndBytesConfig(
     load_in_4bit=True,
-    bnb_4bit_compute_dtype=torch.float16,
-    llm_int8_enable_fp32_cpu_offload=True  # Enable FP32 offloading to CPU
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16,
+    llm_int8_enable_fp32_cpu_offload=True
 )
 
-# Use CPU if no GPU is available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
-
-max_memory = {
-    "cuda": "8GiB",
-    "cpu": "100GiB",
-}
-
-# Load the model with quantization
+# Load model and tokenizer
 model = AutoModelForCausalLM.from_pretrained(
-   "akjindal53244/Llama-3.1-Storm-8B",
-   max_memory=max_memory
+    model_name,
+    quantization_config=quantization_config,
+    device_map="auto",
+    max_memory={i: "8GiB" for i in range(torch.cuda.device_count())}
 )
+model = prepare_model_for_kbit_training(model)  # Critical fix
 
-tokenizer = AutoTokenizer.from_pretrained("akjindal53244/Llama-3.1-Storm-8B")
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer.pad_token = tokenizer.eos_token  # Set pad token
 
-# Load dataset
-dataset = load_dataset("json", data_files="trainData.json")
+# Load and preprocess dataset
+dataset = load_dataset("json", data_files="trainData.json", split="train")
 
-# Preprocess the dataset
 def preprocess(examples):
-    sequences = [f"{examples['input'][i]} {examples['response'][i]}" for i in range(len(examples['input']))]
-    
-    model_inputs = tokenizer(sequences, max_length=max_seq_length, truncation=True)
-    return model_inputs
+    instructions = [f"### Instruction:\n{ex}\n" for ex in examples['input']]
+    responses = [f"### Response:\n{ex}</s>" for ex in examples['response']]
+    sequences = [inst + resp for inst, resp in zip(instructions, responses)]
 
-dataset = dataset.map(preprocess, batched=True)
+    tokenized = tokenizer(
+        sequences,
+        max_length=max_seq_length,
+        truncation=True,
+        padding="max_length",
+        return_tensors="pt"
+    )
+    return tokenized
 
-# Define Lora configuration
+dataset = dataset.map(preprocess, batched=True, remove_columns=dataset.column_names)
+
+# LoRA configuration
 lora_config = LoraConfig(
     r=64,
     lora_alpha=128,
-    target_modules=["q_proj", "v_proj"],
+    target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
     lora_dropout=0.05,
     bias="none",
-    task_type="CAUSAL_LM"
+    task_type="CAUSAL_LM",
+    inference_mode=False
 )
 
-# Prepare model for Lora training
+# Apply LoRA
 model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
 
-# Define training arguments
+# Training arguments
 training_args = TrainingArguments(
-    output_dir="./lora_finetuned_llama_storm",
+    output_dir=output_dir,
     per_device_train_batch_size=1,
     gradient_accumulation_steps=4,
     num_train_epochs=3,
     learning_rate=2e-4,
-    fp16=True,  # Disable FP16 if using CPU
+    bf16=torch.cuda.is_bf16_supported(),
+    gradient_checkpointing=True,
     save_strategy="epoch",
     logging_steps=10,
-    optim="adamw_torch"
+    optim="adamw_torch",
+    report_to="none",
+    remove_unused_columns=False,
+    warmup_ratio=0.1,
+    lr_scheduler_type="cosine"
 )
 
-# Use standard data collator for language modeling
-from transformers import DataCollatorForLanguageModeling
+# Data collator
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
-    mlm=False,  # Set to False for causal language modeling
-    pad_to_multiple_of=None
+    mlm=False,
+    pad_to_multiple_of=8
 )
 
-# Initialize trainer
+# Initialize Trainer
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=dataset["train"],
+    train_dataset=dataset,
     data_collator=data_collator
 )
 
-# Train the model
+# Train and save
 trainer.train()
+model.save_pretrained(output_dir)
+tokenizer.save_pretrained(output_dir)
 
-# Save the model
-model.save_pretrained("./lora_finetuned_llama_storm")
-tokenizer.save_pretrained("./lora_finetuned_llama_storm")
+print("Training complete! Model saved to", output_dir)
+
