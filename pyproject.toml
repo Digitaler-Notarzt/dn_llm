@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dn_llm"
-version = "0.1.0.0"
+version = "0.1.1.0"
 authors = [{ name = "czlabinger", email = "czlabinger@student.tgm.ac.at" }]
 description = "Package to interact with LLMs"
 readme = "README.md"
