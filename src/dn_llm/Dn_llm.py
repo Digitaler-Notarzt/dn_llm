@@ -94,8 +94,8 @@ Key Reminders
             else:
                 content = token['choices'][0]['delta']['content']
                 result += content
-                #print(result + "\n", end="", flush=True)  # Print each token immediately
-                print(content, end="")
+                print(result + "\n", end="", flush=True)  # Print each token immediately
+                #print(content, end="")
 
         print()  # Add a newline after the response is complete
         return result
